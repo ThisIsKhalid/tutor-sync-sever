@@ -8,6 +8,12 @@ import handleValidationError from "../errors/handleValidationError";
 import handleZodError from "../errors/handleZodError";
 import { TErrorSources } from "../interface/error";
 
+/**
+ * Global error handling middleware for the Express application.
+ * This middleware captures different types of errors, processes them,
+ * and returns a standardized error response to the client.
+ */
+
 const globalErrorHandler: ErrorRequestHandler = (
   err,
   req: Request,
@@ -16,9 +22,9 @@ const globalErrorHandler: ErrorRequestHandler = (
 ) => {
   console.log(err.statusCode);
 
-  // default error response
+  // Default error response values for any unhandled errors
   let statusCode = 500;
-  let message = "Something went wrong";
+  let message = "Something went wrong!";
   let errorSources: TErrorSources = [
     {
       path: "",
@@ -26,28 +32,40 @@ const globalErrorHandler: ErrorRequestHandler = (
     },
   ];
 
-  // custom error response
+  // 1. Handling Zod validation errors
   if (err instanceof ZodError) {
     const simplifiedError = handleZodError(err);
-    statusCode = simplifiedError.statusCode;
-    message = simplifiedError.message;
-    errorSources = simplifiedError.errorSources;
-  } else if (err?.name === "ValidationError") {
+    statusCode = simplifiedError?.statusCode;
+    message = simplifiedError?.message;
+    errorSources = simplifiedError?.errorSources;
+  }
+
+  // 2. Handling Mongoose validation errors
+  else if (err?.name === "ValidationError") {
     const simplifiedError = handleValidationError(err);
-    statusCode = simplifiedError.statusCode;
-    message = simplifiedError.message;
-    errorSources = simplifiedError.errorSources;
-  } else if (err?.name === "CastError") {
+    statusCode = simplifiedError?.statusCode;
+    message = simplifiedError?.message;
+    errorSources = simplifiedError?.errorSources;
+  }
+
+  // 3. Handling Mongoose casting errors (e.g., invalid ObjectId)
+  else if (err?.name === "CastError") {
     const simplifiedError = handleCastError(err);
-    statusCode = simplifiedError.statusCode;
-    message = simplifiedError.message;
-    errorSources = simplifiedError.errorSources;
-  } else if (err?.code === 11000) {
+    statusCode = simplifiedError?.statusCode;
+    message = simplifiedError?.message;
+    errorSources = simplifiedError?.errorSources;
+  }
+
+  // 4. Handling MongoDB duplicate key errors (error code 11000)
+  else if (err?.code === 11000) {
     const simplifiedError = handleDuplicateError(err);
-    statusCode = simplifiedError.statusCode;
-    message = simplifiedError.message;
-    errorSources = simplifiedError.errorSources;
-  } else if (err instanceof AppError) {
+    statusCode = simplifiedError?.statusCode;
+    message = simplifiedError?.message;
+    errorSources = simplifiedError?.errorSources;
+  }
+
+  // 5. Handling custom application errors
+  else if (err instanceof AppError) {
     statusCode = err?.statusCode;
     message = err?.message;
     errorSources = [
@@ -56,7 +74,10 @@ const globalErrorHandler: ErrorRequestHandler = (
         message: err?.message,
       },
     ];
-  } else if (err instanceof Error) {
+  }
+
+  // 6. Handling generic JavaScript errors
+  else if (err instanceof Error) {
     message = err.message;
     errorSources = [
       {
@@ -66,7 +87,7 @@ const globalErrorHandler: ErrorRequestHandler = (
     ];
   }
 
-  // ultimate error response
+  // Send the final error response
   res.status(statusCode).json({
     success: false,
     message,
@@ -78,6 +99,8 @@ const globalErrorHandler: ErrorRequestHandler = (
 
 export default globalErrorHandler;
 
+// Example of how `instanceof` works with a custom class
+// This part demonstrates the use of the `instanceof` operator
 // class Car {}
 // const myCar = new Car();
 // console.log(myCar instanceof Car); // true
