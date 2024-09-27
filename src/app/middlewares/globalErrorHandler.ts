@@ -42,3 +42,10 @@ const globalErrorHandler: ErrorRequestHandler = (
 };
 
 export default globalErrorHandler;
+
+
+
+// class Car {}
+// const myCar = new Car();
+// console.log(myCar instanceof Car); // true
+
