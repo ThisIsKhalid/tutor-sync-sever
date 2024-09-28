@@ -2,6 +2,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import express, { Application, Request, Response } from "express";
 import globalErrorHandler from "./app/middlewares/globalErrorHandler";
+import router from "./app/routes";
 
 const app: Application = express();
 
@@ -17,6 +18,9 @@ app.use(
   }),
 );
 
+// routes
+app.use("/api/v1", router);
+
 app.get("/", (req: Request, res: Response) => {
   res.send(
     `<section style="display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f0f0f0;">
@@ -29,8 +33,6 @@ app.get("/", (req: Request, res: Response) => {
     </section>`,
   );
 });
-
-// routes
 
 // Error Handler
 app.use(globalErrorHandler);
